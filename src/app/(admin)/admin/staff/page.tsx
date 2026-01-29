@@ -300,12 +300,12 @@ export default function StaffManagement() {
               className="pl-10"
             />
           </div>
-          <Select value={selectedRole || ""} onValueChange={(v) => setSelectedRole(v || null)}>
+          <Select value={selectedRole || "all"} onValueChange={(v) => setSelectedRole(v === "all" ? null : v)}>
             <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="All Roles" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Roles</SelectItem>
+              <SelectItem value="all">All Roles</SelectItem>
               <SelectItem value="WAITER">Waiters</SelectItem>
               <SelectItem value="CHEF">Chefs</SelectItem>
               <SelectItem value="RECEPTIONIST">Receptionists</SelectItem>

@@ -244,12 +244,12 @@ export default function MenuManagement() {
               className="pl-10"
             />
           </div>
-          <Select value={selectedCategory || ""} onValueChange={(v) => setSelectedCategory(v || null)}>
+          <Select value={selectedCategory || "all"} onValueChange={(v) => setSelectedCategory(v === "all" ? null : v)}>
             <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all">All Categories</SelectItem>
               {menuCategories.map(cat => (
                 <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
               ))}
