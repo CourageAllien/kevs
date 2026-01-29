@@ -75,20 +75,18 @@ export async function POST(request: Request) {
           zipCode: "",
           phone: validatedData.phone || "",
           email: validatedData.email,
-          cuisine: [],
-          features: [],
-          // Create default opening hours
-          openingHours: {
-            create: [
-              { dayOfWeek: 0, openTime: "10:00", closeTime: "22:00", isClosed: false },
-              { dayOfWeek: 1, openTime: "10:00", closeTime: "22:00", isClosed: false },
-              { dayOfWeek: 2, openTime: "10:00", closeTime: "22:00", isClosed: false },
-              { dayOfWeek: 3, openTime: "10:00", closeTime: "22:00", isClosed: false },
-              { dayOfWeek: 4, openTime: "10:00", closeTime: "22:00", isClosed: false },
-              { dayOfWeek: 5, openTime: "10:00", closeTime: "23:00", isClosed: false },
-              { dayOfWeek: 6, openTime: "10:00", closeTime: "23:00", isClosed: false },
-            ],
-          },
+          cuisine: "", // Comma-separated cuisines
+          features: "", // Comma-separated features
+          // JSON string for opening hours
+          hours: JSON.stringify({
+            monday: { open: "10:00", close: "22:00" },
+            tuesday: { open: "10:00", close: "22:00" },
+            wednesday: { open: "10:00", close: "22:00" },
+            thursday: { open: "10:00", close: "22:00" },
+            friday: { open: "10:00", close: "23:00" },
+            saturday: { open: "10:00", close: "23:00" },
+            sunday: { open: "10:00", close: "22:00" },
+          }),
         },
       });
       
@@ -97,9 +95,10 @@ export async function POST(request: Request) {
         data: {
           userId: user.id,
           restaurantId: restaurant.id,
+          role: "ADMIN",
           bio: "Restaurant Owner",
-          languages: ["English"],
-          specialties: [],
+          languages: "English", // Comma-separated languages
+          specialties: "", // Comma-separated specialties
           yearsExperience: 0,
         },
       });
