@@ -65,6 +65,37 @@ export default function MenuManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newItem, setNewItem] = useState({
+    name: "",
+    category: "",
+    price: "",
+    prepTime: "15",
+    description: "",
+  });
+
+  const handleAddItem = () => {
+    if (!newItem.name || !newItem.category || !newItem.price) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    const item = {
+      id: Date.now().toString(),
+      name: newItem.name,
+      category: menuCategories.find(c => c.id === newItem.category)?.name || "Appetizers",
+      price: parseFloat(newItem.price),
+      description: newItem.description || "Delicious menu item",
+      image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&h=200&fit=crop",
+      available: true,
+      popular: false,
+      dietary: [] as string[],
+    };
+
+    setItems([...items, item]);
+    setNewItem({ name: "", category: "", price: "", prepTime: "15", description: "" });
+    setIsAddDialogOpen(false);
+    toast.success(`${item.name} added to menu`);
+  };
 
   const filteredItems = items.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -108,12 +139,19 @@ export default function MenuManagement() {
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Item Name</Label>
-                    <Input placeholder="e.g., Spaghetti Carbonara" />
+                    <Label>Item Name *</Label>
+                    <Input 
+                      placeholder="e.g., Spaghetti Carbonara"
+                      value={newItem.name}
+                      onChange={(e) => setNewItem({...newItem, name: e.target.value})}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label>Category</Label>
-                    <Select>
+                    <Label>Category *</Label>
+                    <Select
+                      value={newItem.category}
+                      onValueChange={(v) => setNewItem({...newItem, category: v})}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
@@ -126,24 +164,36 @@ export default function MenuManagement() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Price ($)</Label>
-                      <Input type="number" step="0.01" placeholder="0.00" />
+                      <Label>Price ($) *</Label>
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        placeholder="0.00"
+                        value={newItem.price}
+                        onChange={(e) => setNewItem({...newItem, price: e.target.value})}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>Prep Time (min)</Label>
-                      <Input type="number" placeholder="15" />
+                      <Input 
+                        type="number" 
+                        placeholder="15"
+                        value={newItem.prepTime}
+                        onChange={(e) => setNewItem({...newItem, prepTime: e.target.value})}
+                      />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label>Description</Label>
-                    <Textarea placeholder="Describe the dish..." />
+                    <Textarea 
+                      placeholder="Describe the dish..."
+                      value={newItem.description}
+                      onChange={(e) => setNewItem({...newItem, description: e.target.value})}
+                    />
                   </div>
                   <Button 
                     className="w-full bg-wine hover:bg-wine/90"
-                    onClick={() => {
-                      toast.success("Item added successfully");
-                      setIsAddDialogOpen(false);
-                    }}
+                    onClick={handleAddItem}
                   >
                     Add Item
                   </Button>

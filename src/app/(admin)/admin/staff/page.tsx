@@ -139,6 +139,38 @@ export default function StaffManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newStaff, setNewStaff] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    role: "",
+  });
+
+  const handleAddStaff = () => {
+    if (!newStaff.name || !newStaff.email || !newStaff.role) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    const member = {
+      id: Date.now().toString(),
+      name: newStaff.name,
+      email: newStaff.email,
+      phone: newStaff.phone || "+1 555-000-0000",
+      role: newStaff.role,
+      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
+      status: "OFF_DUTY",
+      hireDate: new Date().toISOString().split("T")[0],
+      rating: 0,
+      ordersToday: 0,
+      tipsToday: 0,
+    };
+
+    setStaff([...staff, member]);
+    setNewStaff({ name: "", email: "", phone: "", role: "" });
+    setIsAddDialogOpen(false);
+    toast.success(`${member.name} added to staff`);
+  };
 
   const filteredStaff = staff.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -174,20 +206,36 @@ export default function StaffManagement() {
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Full Name</Label>
-                    <Input placeholder="e.g., John Smith" />
+                    <Label>Full Name *</Label>
+                    <Input 
+                      placeholder="e.g., John Smith"
+                      value={newStaff.name}
+                      onChange={(e) => setNewStaff({...newStaff, name: e.target.value})}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label>Email</Label>
-                    <Input type="email" placeholder="john@kevskitchen.com" />
+                    <Label>Email *</Label>
+                    <Input 
+                      type="email" 
+                      placeholder="john@kevskitchen.com"
+                      value={newStaff.email}
+                      onChange={(e) => setNewStaff({...newStaff, email: e.target.value})}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Phone</Label>
-                    <Input placeholder="+1 555-000-0000" />
+                    <Input 
+                      placeholder="+1 555-000-0000"
+                      value={newStaff.phone}
+                      onChange={(e) => setNewStaff({...newStaff, phone: e.target.value})}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label>Role</Label>
-                    <Select>
+                    <Label>Role *</Label>
+                    <Select
+                      value={newStaff.role}
+                      onValueChange={(v) => setNewStaff({...newStaff, role: v})}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
@@ -201,10 +249,7 @@ export default function StaffManagement() {
                   </div>
                   <Button 
                     className="w-full bg-wine hover:bg-wine/90"
-                    onClick={() => {
-                      toast.success("Staff member added successfully");
-                      setIsAddDialogOpen(false);
-                    }}
+                    onClick={handleAddStaff}
                   >
                     Add Staff Member
                   </Button>
