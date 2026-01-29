@@ -121,9 +121,9 @@ export const authConfig: NextAuthConfig = {
     },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.restaurantId = token.restaurantId;
+        session.user.id = token.id as string;
+        session.user.role = token.role as UserRole;
+        session.user.restaurantId = token.restaurantId as string | undefined;
       }
       return session;
     },
