@@ -39,6 +39,10 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useDemoAuth();
+  
+  // Determine if user is Admin (owner) or Manager
+  const isAdmin = user?.role === "ADMIN";
+  const portalTitle = isAdmin ? "Admin Portal" : "Manager Portal";
 
   const handleLogout = () => {
     logout();
@@ -57,7 +61,7 @@ export function AdminSidebar() {
             <span className="font-serif text-xl font-semibold text-foreground block">
               Kevs
             </span>
-            <span className="text-xs text-muted-foreground">Admin Portal</span>
+            <span className="text-xs text-muted-foreground">{portalTitle}</span>
           </div>
         </Link>
       </div>
@@ -147,7 +151,7 @@ export function AdminSidebar() {
           <div className="w-8 h-8 rounded-full bg-gradient-wine flex items-center justify-center">
             <UtensilsCrossed className="w-4 h-4 text-cream" />
           </div>
-          <span className="font-serif text-lg font-semibold">Admin</span>
+          <span className="font-serif text-lg font-semibold">{isAdmin ? "Admin" : "Manager"}</span>
         </Link>
 
         <div className="flex items-center gap-2">
