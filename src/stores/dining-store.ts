@@ -1,8 +1,6 @@
 "use client";
 
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { useEffect, useState } from 'react';
 
 // Order item in the current dining session
 interface SessionOrderItem {
@@ -112,10 +110,11 @@ interface DiningState {
   getActiveOrders: () => SessionOrderItem[];
 }
 
-const useDiningStoreBase = create<DiningState>()(
-  persist(
-    (set, get) => ({
-      activeSession: null,
+// Using simple store without persistence to avoid SSR hydration issues
+// Session data will be lost on page refresh, but this is acceptable for demo
+export const useDiningStore = create<DiningState>()(
+  (set, get) => ({
+    activeSession: null,
       
       startSession: (sessionData) => {
         set({
@@ -404,50 +403,5 @@ const useDiningStoreBase = create<DiningState>()(
         if (!session) return [];
         return session.orders.filter(o => !['SERVED', 'CANCELLED'].includes(o.status));
       },
-    }),
-    {
-      name: 'kevs-kitchen-dining',
-      storage: createJSONStorage(() => localStorage),
-    }
-  )
+    })
 );
-
-// Hook that waits for hydration to avoid SSR mismatches
-export function useDiningStore<T>(selector: (state: DiningState) => T): T {
-  const storeValue = useDiningStoreBase(selector);
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
-
-  // For selectors that return null/undefined by default, this works fine
-  // The store will return the hydrated value after mount
-  if (!isHydrated) {
-    // Return default values for common selectors
-    return selector({
-      activeSession: null,
-      startSession: () => {},
-      endSession: () => {},
-      addToOrder: () => {},
-      updateOrderItemStatus: () => {},
-      removeFromOrder: () => {},
-      addCustomRequest: () => {},
-      updateRequestStatus: () => {},
-      sendMessage: () => {},
-      receiveMessage: () => {},
-      markMessagesRead: () => {},
-      requestBill: () => {},
-      setTip: () => {},
-      markAsPaid: () => {},
-      getRunningTotal: () => 0,
-      getPendingOrders: () => [],
-      getActiveOrders: () => [],
-    } as DiningState);
-  }
-
-  return storeValue;
-}
-
-// Export the base store for direct access when needed
-export { useDiningStoreBase };

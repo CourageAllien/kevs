@@ -1,8 +1,6 @@
 "use client";
 
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import { useEffect, useState } from "react";
 import type { UserRole } from "@/types";
 
 export interface DemoUser {
@@ -67,73 +65,31 @@ export const demoUsers: Record<string, DemoUser> = {
 interface DemoAuthState {
   user: DemoUser | null;
   isAuthenticated: boolean;
-  _hasHydrated: boolean;
   login: (userType: keyof typeof demoUsers) => void;
   loginAsUser: (user: DemoUser) => void;
   logout: () => void;
-  setHasHydrated: (state: boolean) => void;
 }
 
-export const useDemoAuthStore = create<DemoAuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      isAuthenticated: false,
-      _hasHydrated: false,
-      login: (userType) => {
-        const user = demoUsers[userType];
-        if (user) {
-          set({ user, isAuthenticated: true });
-        }
-      },
-      loginAsUser: (user) => {
+// Simple store without persistence to avoid SSR hydration issues
+// Login state will be lost on page refresh, but this is acceptable for demo mode
+export const useDemoAuth = create<DemoAuthState>()(
+  (set) => ({
+    user: null,
+    isAuthenticated: false,
+    login: (userType) => {
+      const user = demoUsers[userType];
+      if (user) {
         set({ user, isAuthenticated: true });
-      },
-      logout: () => {
-        set({ user: null, isAuthenticated: false });
-      },
-      setHasHydrated: (state) => {
-        set({ _hasHydrated: state });
-      },
-    }),
-    {
-      name: "kevs-kitchen-demo-auth",
-      storage: createJSONStorage(() => localStorage),
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
-      },
-    }
-  )
+      }
+    },
+    loginAsUser: (user) => {
+      set({ user, isAuthenticated: true });
+    },
+    logout: () => {
+      set({ user: null, isAuthenticated: false });
+    },
+  })
 );
-
-// Hook that waits for hydration to avoid SSR mismatches
-export function useDemoAuth() {
-  const store = useDemoAuthStore();
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
-
-  // Return default values during SSR/hydration
-  if (!isHydrated) {
-    return {
-      user: null,
-      isAuthenticated: false,
-      login: store.login,
-      loginAsUser: store.loginAsUser,
-      logout: store.logout,
-    };
-  }
-
-  return {
-    user: store.user,
-    isAuthenticated: store.isAuthenticated,
-    login: store.login,
-    loginAsUser: store.loginAsUser,
-    logout: store.logout,
-  };
-}
 
 // Helper to get redirect URL based on role
 export function getRoleRedirectUrl(role: UserRole): string {
