@@ -1,36 +1,196 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kevs Kitchen - Multi-Restaurant Management Platform
+
+A comprehensive restaurant management platform built with Next.js 14, featuring digital menus, table booking, real-time order management, and complete staff dashboards.
+
+![Kevs Kitchen](https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&h=400&fit=crop)
+
+## Features
+
+### For Customers
+- 🍽️ **Digital Menu** - Interactive menus with dietary filters, allergen info, and beautiful imagery
+- 📅 **Table Booking** - Real-time availability with floor plan selection
+- 🛒 **Online Ordering** - Cart management with customizations and special instructions
+- 💳 **Seamless Payments** - Stripe integration with tip options and bill splitting
+- ⭐ **Reviews & Ratings** - Rate dishes and service
+- 🎁 **Loyalty Program** - Earn points and unlock rewards
+
+### For Staff
+- **Waiter Dashboard** - Order queue, table management, customer messaging
+- **Kitchen Display System (KDS)** - Real-time orders with timers and priority handling
+- **Reception Portal** - Reservations, waitlist, and floor plan management
+
+### For Management
+- 📊 **Analytics Dashboard** - Revenue, orders, and performance metrics
+- 👥 **Staff Management** - Scheduling, roles, and performance tracking
+- 📋 **Menu Management** - CRUD for items, categories, and pricing
+- 🪑 **Table Configuration** - Floor plan editor
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | Next.js 14 (App Router), TypeScript, React |
+| Styling | Tailwind CSS, shadcn/ui |
+| State | Zustand, TanStack Query |
+| Database | PostgreSQL, Prisma ORM |
+| Auth | NextAuth.js v5 |
+| Real-time | Socket.io |
+| Payments | Stripe |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 18+
+- PostgreSQL database
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   cd kevs-kitchen
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Update the `.env` file with your database URL and other credentials:
+   ```env
+   DATABASE_URL="postgresql://user:password@localhost:5432/kevs_kitchen"
+   AUTH_SECRET="your-secret-key"
+   ```
+
+4. **Set up the database**
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
+
+5. **Seed the database** (optional)
+   ```bash
+   npx prisma db seed
+   ```
+
+6. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+7. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+## Demo Accounts
+
+After seeding the database, you can log in with these demo accounts:
+
+| Role | Email | Password |
+|------|-------|----------|
+| Customer | demo@customer.com | demo123 |
+| Manager | demo@manager.com | demo123 |
+| Waiter | waiter@demo.com | demo123 |
+| Chef | chef@demo.com | demo123 |
+| Receptionist | reception@demo.com | demo123 |
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── (auth)/           # Login, register pages
+│   ├── (customer)/       # Customer-facing pages
+│   │   ├── restaurants/  # Restaurant listing & details
+│   │   ├── booking/      # Reservation pages
+│   │   ├── orders/       # Order history
+│   │   └── checkout/     # Checkout flow
+│   ├── (staff)/          # Staff dashboards
+│   │   ├── waiter/       # Waiter portal
+│   │   ├── kitchen/      # Kitchen display
+│   │   └── reception/    # Reception portal
+│   ├── (admin)/          # Admin/manager dashboard
+│   └── api/              # API routes
+├── components/
+│   ├── ui/               # shadcn/ui components
+│   ├── customer/         # Customer components
+│   ├── staff/            # Staff components
+│   └── admin/            # Admin components
+├── lib/                  # Utilities and configs
+├── stores/               # Zustand stores
+├── types/                # TypeScript types
+└── prisma/               # Database schema
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Key Pages
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Path | Description |
+|------|-------------|
+| `/` | Landing page |
+| `/restaurants` | Restaurant listing |
+| `/restaurants/[slug]` | Restaurant menu |
+| `/restaurants/[slug]/book` | Table booking |
+| `/checkout` | Order checkout |
+| `/waiter` | Waiter dashboard |
+| `/kitchen` | Kitchen display |
+| `/reception` | Reception portal |
+| `/dashboard` | Manager dashboard |
+| `/admin/menu` | Menu management |
+| `/admin/staff` | Staff management |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment Variables
 
-## Learn More
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `AUTH_SECRET` | NextAuth secret key |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth secret |
+| `STRIPE_SECRET_KEY` | Stripe secret key |
+| `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
 
-To learn more about Next.js, take a look at the following resources:
+## Development
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Run development server
+npm run dev
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Build for production
+npm run build
 
-## Deploy on Vercel
+# Run production build
+npm start
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Run linter
+npm run lint
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Generate Prisma client
+npx prisma generate
+
+# Push database schema
+npx prisma db push
+
+# Open Prisma Studio
+npx prisma studio
+```
+
+## Deployment
+
+This app is designed to be deployed on Vercel with a PostgreSQL database (Supabase, Neon, or similar).
+
+1. Push your code to GitHub
+2. Import the repository in Vercel
+3. Add environment variables
+4. Deploy!
+
+## License
+
+MIT License - feel free to use this project for your own restaurant!
+
+---
+
+Built with ❤️ using Next.js, Tailwind CSS, and shadcn/ui

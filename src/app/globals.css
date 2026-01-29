@@ -1,26 +1,319 @@
-@import "tailwindcss";
+/* Import Google Fonts - must be first */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
   --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  
+  /* Custom restaurant colors */
+  --color-wine: var(--wine);
+  --color-wine-light: var(--wine-light);
+  --color-wine-dark: var(--wine-dark);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-cream: var(--cream);
+  --color-cream-dark: var(--cream-dark);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --radius: 0.625rem;
+  
+  /* Kevs Kitchen Theme - Light Mode */
+  /* Warm cream backgrounds */
+  --background: oklch(0.98 0.01 85);
+  --foreground: oklch(0.20 0.02 30);
+  
+  /* Cards with subtle warmth */
+  --card: oklch(0.995 0.005 85);
+  --card-foreground: oklch(0.20 0.02 30);
+  
+  --popover: oklch(0.995 0.005 85);
+  --popover-foreground: oklch(0.20 0.02 30);
+  
+  /* Burgundy/Wine as primary */
+  --primary: oklch(0.35 0.15 15);
+  --primary-foreground: oklch(0.98 0.01 85);
+  
+  /* Warm cream secondary */
+  --secondary: oklch(0.94 0.02 80);
+  --secondary-foreground: oklch(0.30 0.05 20);
+  
+  --muted: oklch(0.94 0.015 80);
+  --muted-foreground: oklch(0.50 0.02 30);
+  
+  /* Gold accent */
+  --accent: oklch(0.75 0.15 85);
+  --accent-foreground: oklch(0.20 0.02 30);
+  
+  --destructive: oklch(0.55 0.22 25);
+  
+  --border: oklch(0.88 0.02 75);
+  --input: oklch(0.92 0.015 80);
+  --ring: oklch(0.45 0.12 15);
+  
+  /* Chart colors with restaurant theme */
+  --chart-1: oklch(0.35 0.15 15); /* Wine */
+  --chart-2: oklch(0.75 0.15 85); /* Gold */
+  --chart-3: oklch(0.50 0.10 150); /* Sage */
+  --chart-4: oklch(0.60 0.12 30); /* Terracotta */
+  --chart-5: oklch(0.45 0.08 250); /* Navy */
+  
+  /* Sidebar */
+  --sidebar: oklch(0.25 0.08 15);
+  --sidebar-foreground: oklch(0.95 0.01 85);
+  --sidebar-primary: oklch(0.75 0.15 85);
+  --sidebar-primary-foreground: oklch(0.20 0.02 30);
+  --sidebar-accent: oklch(0.35 0.10 15);
+  --sidebar-accent-foreground: oklch(0.95 0.01 85);
+  --sidebar-border: oklch(0.35 0.08 15);
+  --sidebar-ring: oklch(0.75 0.15 85);
+  
+  /* Custom restaurant colors */
+  --wine: oklch(0.35 0.15 15);
+  --wine-light: oklch(0.45 0.12 15);
+  --wine-dark: oklch(0.25 0.12 15);
+  --gold: oklch(0.75 0.15 85);
+  --gold-light: oklch(0.85 0.12 85);
+  --cream: oklch(0.98 0.01 85);
+  --cream-dark: oklch(0.94 0.02 80);
+}
+
+.dark {
+  /* Dark mode - Elegant restaurant evening ambiance */
+  --background: oklch(0.12 0.02 30);
+  --foreground: oklch(0.95 0.01 85);
+  
+  --card: oklch(0.18 0.025 25);
+  --card-foreground: oklch(0.95 0.01 85);
+  
+  --popover: oklch(0.18 0.025 25);
+  --popover-foreground: oklch(0.95 0.01 85);
+  
+  /* Lighter wine for dark mode */
+  --primary: oklch(0.55 0.15 15);
+  --primary-foreground: oklch(0.98 0.01 85);
+  
+  --secondary: oklch(0.22 0.03 25);
+  --secondary-foreground: oklch(0.92 0.01 85);
+  
+  --muted: oklch(0.25 0.025 25);
+  --muted-foreground: oklch(0.65 0.02 80);
+  
+  /* Brighter gold for dark mode */
+  --accent: oklch(0.80 0.15 85);
+  --accent-foreground: oklch(0.15 0.02 30);
+  
+  --destructive: oklch(0.60 0.20 25);
+  
+  --border: oklch(0.28 0.03 25);
+  --input: oklch(0.25 0.025 25);
+  --ring: oklch(0.55 0.12 15);
+  
+  --chart-1: oklch(0.55 0.15 15);
+  --chart-2: oklch(0.80 0.15 85);
+  --chart-3: oklch(0.60 0.10 150);
+  --chart-4: oklch(0.65 0.12 30);
+  --chart-5: oklch(0.55 0.08 250);
+  
+  --sidebar: oklch(0.15 0.02 25);
+  --sidebar-foreground: oklch(0.95 0.01 85);
+  --sidebar-primary: oklch(0.80 0.15 85);
+  --sidebar-primary-foreground: oklch(0.15 0.02 30);
+  --sidebar-accent: oklch(0.25 0.03 25);
+  --sidebar-accent-foreground: oklch(0.95 0.01 85);
+  --sidebar-border: oklch(0.28 0.03 25);
+  --sidebar-ring: oklch(0.55 0.12 15);
+  
+  --wine: oklch(0.55 0.15 15);
+  --wine-light: oklch(0.65 0.12 15);
+  --wine-dark: oklch(0.40 0.12 15);
+  --gold: oklch(0.80 0.15 85);
+  --gold-light: oklch(0.88 0.12 85);
+  --cream: oklch(0.95 0.01 85);
+  --cream-dark: oklch(0.88 0.02 80);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom utility classes */
+@layer utilities {
+  .font-serif {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+  .font-sans {
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+  
+  /* Gradient backgrounds */
+  .bg-gradient-wine {
+    background: linear-gradient(135deg, oklch(0.35 0.15 15), oklch(0.25 0.12 15));
+  }
+  .bg-gradient-gold {
+    background: linear-gradient(135deg, oklch(0.80 0.15 85), oklch(0.70 0.12 85));
+  }
+  
+  /* Text gradients */
+  .text-gradient-wine {
+    background: linear-gradient(135deg, oklch(0.45 0.15 15), oklch(0.35 0.12 15));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Subtle patterns for backgrounds */
+  .bg-pattern-dots {
+    background-image: radial-gradient(circle, oklch(0.35 0.15 15 / 5%) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+  
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+  }
+  .animate-slide-in-right {
+    animation: slideInRight 0.3s ease-out forwards;
+  }
+  
+  /* Staggered animations */
+  .animation-delay-100 { animation-delay: 100ms; }
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-300 { animation-delay: 300ms; }
+  .animation-delay-400 { animation-delay: 400ms; }
+  .animation-delay-500 { animation-delay: 500ms; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Kitchen display specific styles */
+.kitchen-display {
+  font-size: 1.25rem;
+}
+
+.kitchen-display .order-ticket {
+  @apply border-2 rounded-lg p-4;
+}
+
+.kitchen-display .order-ticket.priority-rush {
+  @apply border-orange-500 bg-orange-50 dark:bg-orange-950;
+}
+
+.kitchen-display .order-ticket.priority-vip {
+  @apply border-purple-500 bg-purple-50 dark:bg-purple-950;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: oklch(0.95 0.01 85);
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: oklch(0.18 0.025 25);
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(0.75 0.08 15);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.55 0.12 15);
+}
+
+/* Print styles for receipts */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
 }

@@ -1,0 +1,592 @@
+// Prisma Schema for Kev's Kitchen Restaurant Platform
+// SQLite-compatible version for local development
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ========================================
+// AUTHENTICATION & USERS
+// ========================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  phone         String?
+  role          String    @default("CUSTOMER") // UserRole as string
+  
+  // Multi-tenancy
+  restaurantId  String?
+  restaurant    Restaurant? @relation(fields: [restaurantId], references: [id])
+  
+  // Customer loyalty
+  loyaltyTier   String    @default("BRONZE") // LoyaltyTier as string
+  loyaltyPoints Int       @default(0)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  staff         Staff?
+  orders        Order[]
+  reservations  Reservation[]
+  reviews       Review[]
+  loyaltyHistory LoyaltyPoint[]
+  sentMessages  Message[]     @relation("SentMessages")
+  receivedMessages Message[]  @relation("ReceivedMessages")
+
+  @@index([email])
+  @@index([restaurantId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ========================================
+// RESTAURANT & ORGANIZATION
+// ========================================
+
+model Restaurant {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  cuisine     String   // Comma-separated cuisines
+  address     String
+  city        String
+  state       String?
+  country     String   @default("US")
+  zipCode     String?
+  phone       String?
+  email       String?
+  website     String?
+  
+  // Branding
+  logo        String?
+  coverImage  String?
+  images      String?  // Comma-separated image URLs
+  
+  // Operating hours (JSON string)
+  hours       String?  // JSON: { monday: { open: "09:00", close: "22:00" }, ... }
+  
+  // Ratings & reviews
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  priceRange  Int      @default(2)  // 1-4 scale ($-$$$$)
+  
+  // Features (comma-separated)
+  features    String?  // "outdoor_seating,wifi,parking"
+  
+  // Status
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users       User[]
+  staff       Staff[]
+  tables      Table[]
+  categories  MenuCategory[]
+  orders      Order[]
+  reservations Reservation[]
+  reviews     Review[]
+  announcements Announcement[]
+
+  @@index([slug])
+  @@index([city])
+}
+
+model Staff {
+  id           String     @id @default(cuid())
+  userId       String     @unique
+  restaurantId String
+  role         String     // UserRole as string
+  
+  // Profile
+  bio          String?
+  languages    String?    // Comma-separated
+  specialties  String?    // Comma-separated
+  yearsExperience Int     @default(0)
+  
+  // Performance
+  rating       Float      @default(0)
+  reviewCount  Int        @default(0)
+  totalTips    Float      @default(0)
+  
+  // Work
+  isAvailable  Boolean    @default(true)
+  
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  user         User       @relation(fields: [userId], references: [id])
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  shifts       Shift[]
+  assignedTables Table[]  @relation("AssignedTables")
+  orders       Order[]    @relation("WaiterOrders")
+  preparedItems OrderItem[] @relation("PreparedBy")
+
+  @@index([restaurantId])
+  @@index([role])
+}
+
+model Shift {
+  id           String     @id @default(cuid())
+  staffId      String
+  
+  // Schedule
+  scheduledStart DateTime
+  scheduledEnd   DateTime
+  actualStart    DateTime?
+  actualEnd      DateTime?
+  
+  // Status
+  status       String     @default("SCHEDULED") // ShiftStatus
+  breakStart   DateTime?
+  breakEnd     DateTime?
+  isCurrent    Boolean    @default(false)
+  
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  staff        Staff      @relation(fields: [staffId], references: [id])
+
+  @@index([staffId])
+  @@index([scheduledStart])
+}
+
+// ========================================
+// MENU SYSTEM
+// ========================================
+
+model MenuCategory {
+  id           String      @id @default(cuid())
+  restaurantId String
+  name         String
+  description  String?
+  image        String?
+  sortOrder    Int         @default(0)
+  isActive     Boolean     @default(true)
+  
+  // Time-based availability
+  availableFrom String?    // "11:00"
+  availableTo   String?    // "15:00"
+  
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id])
+  items        MenuItem[]
+
+  @@index([restaurantId])
+  @@index([sortOrder])
+}
+
+model MenuItem {
+  id           String       @id @default(cuid())
+  categoryId   String
+  name         String
+  description  String
+  price        Float
+  image        String?
+  
+  // Dietary & Allergens (comma-separated)
+  dietaryTags  String?      // "VEGETARIAN,GLUTEN_FREE"
+  allergens    String?      // "DAIRY,NUTS"
+  spiceLevel   String?      // SpiceLevel
+  
+  // Portion options (JSON string)
+  portionSizes String?      // "[{ \"size\": \"Regular\", \"price\": 12.99 }]"
+  
+  // Customization options (JSON string)
+  customizations String?    // "[{ \"name\": \"Add cheese\", \"options\": [...] }]"
+  
+  // Kitchen info
+  prepTime     Int          @default(15)  // minutes
+  calories     Int?
+  ingredients  String?      // Comma-separated main ingredients
+  
+  // Availability
+  isAvailable  Boolean      @default(true)
+  isPopular    Boolean      @default(false)
+  isNew        Boolean      @default(false)
+  
+  // Stats
+  orderCount   Int          @default(0)
+  rating       Float        @default(0)
+  reviewCount  Int          @default(0)
+  
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  // Relations
+  category     MenuCategory @relation(fields: [categoryId], references: [id])
+  orderItems   OrderItem[]
+  reviews      Review[]
+
+  @@index([categoryId])
+  @@index([isAvailable])
+}
+
+// ========================================
+// TABLE MANAGEMENT
+// ========================================
+
+model Table {
+  id           String      @id @default(cuid())
+  restaurantId String
+  
+  // Basic info
+  number       String
+  name         String?     // "Window Table", "Chef's Table"
+  capacity     Int
+  minCapacity  Int         @default(1)
+  
+  // Type & location
+  type         String      @default("STANDARD") // TableType
+  section      String?     // "Main Floor", "Patio"
+  floor        Int         @default(1)
+  
+  // Position on floor plan
+  positionX    Float?
+  positionY    Float?
+  
+  // Status
+  status       String      @default("AVAILABLE") // TableStatus
+  
+  // Current assignment
+  currentWaiterId String?
+  currentWaiter   Staff?   @relation("AssignedTables", fields: [currentWaiterId], references: [id])
+  
+  // Features (comma-separated)
+  features     String?     // "window,power_outlet"
+  
+  isActive     Boolean     @default(true)
+  
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id])
+  reservations Reservation[]
+  orders       Order[]
+
+  @@unique([restaurantId, number])
+  @@index([restaurantId])
+  @@index([status])
+}
+
+// ========================================
+// RESERVATIONS
+// ========================================
+
+model Reservation {
+  id           String            @id @default(cuid())
+  restaurantId String
+  customerId   String?
+  tableId      String?
+  
+  // Booking details
+  guestCount   Int
+  date         DateTime
+  time         String            // "19:00"
+  duration     Int               @default(90)  // minutes
+  
+  // Guest info (for non-registered guests)
+  guestName    String
+  guestPhone   String?
+  guestEmail   String?
+  
+  // Status
+  status       String            @default("PENDING") // ReservationStatus
+  confirmedAt  DateTime?
+  seatedAt     DateTime?
+  completedAt  DateTime?
+  cancelledAt  DateTime?
+  
+  // Special requests
+  specialOccasion String?
+  notes        String?
+  
+  // Deposit
+  depositAmount Float?
+  depositPaid   Boolean          @default(false)
+  
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  // Relations
+  restaurant   Restaurant        @relation(fields: [restaurantId], references: [id])
+  customer     User?             @relation(fields: [customerId], references: [id])
+  table        Table?            @relation(fields: [tableId], references: [id])
+  order        Order?
+
+  @@index([restaurantId])
+  @@index([customerId])
+  @@index([date])
+  @@index([status])
+}
+
+// ========================================
+// ORDERS
+// ========================================
+
+model Order {
+  id           String        @id @default(cuid())
+  orderNumber  Int           
+  restaurantId String
+  customerId   String?
+  tableId      String?
+  waiterId     String?
+  reservationId String?      @unique
+  
+  // Type
+  orderType    String        @default("DINE_IN")  // DINE_IN, TAKEOUT, DELIVERY
+  
+  // Status
+  status       String        @default("PENDING") // OrderStatus
+  
+  // Financials
+  subtotal     Float         @default(0)
+  tax          Float         @default(0)
+  tip          Float         @default(0)
+  discount     Float         @default(0)
+  total        Float         @default(0)
+  
+  // Payment
+  paymentStatus String       @default("PENDING") // PaymentStatus
+  paymentMethod String?
+  
+  // Notes
+  specialInstructions String?
+  
+  // Kitchen
+  kitchenPriority String     @default("NORMAL") // KitchenPriority
+  
+  // Timestamps
+  confirmedAt  DateTime?
+  preparingAt  DateTime?
+  readyAt      DateTime?
+  servedAt     DateTime?
+  completedAt  DateTime?
+  cancelledAt  DateTime?
+  
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  // Relations
+  restaurant   Restaurant    @relation(fields: [restaurantId], references: [id])
+  customer     User?         @relation(fields: [customerId], references: [id])
+  table        Table?        @relation(fields: [tableId], references: [id])
+  waiter       Staff?        @relation("WaiterOrders", fields: [waiterId], references: [id])
+  reservation  Reservation?  @relation(fields: [reservationId], references: [id])
+  items        OrderItem[]
+  review       Review?
+
+  @@index([restaurantId])
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id           String        @id @default(cuid())
+  orderId      String
+  menuItemId   String
+  
+  // Item details
+  quantity     Int           @default(1)
+  unitPrice    Float
+  portionSize  String?
+  customizations String?     // JSON: "[{ \"name\": \"Extra cheese\", \"price\": 2.00 }]"
+  specialInstructions String?
+  
+  // Status
+  status       String        @default("PENDING") // OrderItemStatus
+  
+  // Kitchen
+  course       Int           @default(1)  // For course timing
+  preparedById String?
+  preparedBy   Staff?        @relation("PreparedBy", fields: [preparedById], references: [id])
+  startedAt    DateTime?
+  readyAt      DateTime?
+  servedAt     DateTime?
+  
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  // Relations
+  order        Order         @relation(fields: [orderId], references: [id])
+  menuItem     MenuItem      @relation(fields: [menuItemId], references: [id])
+
+  @@index([orderId])
+  @@index([status])
+}
+
+// ========================================
+// REVIEWS & RATINGS
+// ========================================
+
+model Review {
+  id           String     @id @default(cuid())
+  customerId   String
+  restaurantId String
+  orderId      String?    @unique
+  menuItemId   String?
+  
+  // Rating
+  rating       Int        // 1-5
+  title        String?
+  comment      String?
+  
+  // Response
+  responseText String?
+  responseAt   DateTime?
+  
+  // Moderation
+  isPublic     Boolean    @default(true)
+  isVerified   Boolean    @default(false)
+  
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  customer     User       @relation(fields: [customerId], references: [id])
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  order        Order?     @relation(fields: [orderId], references: [id])
+  menuItem     MenuItem?  @relation(fields: [menuItemId], references: [id])
+
+  @@index([restaurantId])
+  @@index([customerId])
+  @@index([rating])
+}
+
+// ========================================
+// LOYALTY PROGRAM
+// ========================================
+
+model LoyaltyPoint {
+  id           String   @id @default(cuid())
+  userId       String
+  
+  points       Int
+  type         String   // EARNED, REDEEMED, EXPIRED, BONUS
+  description  String
+  
+  // Reference
+  orderId      String?
+  
+  expiresAt    DateTime?
+  
+  createdAt    DateTime @default(now())
+
+  // Relations
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ========================================
+// MESSAGING & COMMUNICATION
+// ========================================
+
+model Message {
+  id           String   @id @default(cuid())
+  senderId     String
+  receiverId   String?
+  
+  content      String
+  priority     String   @default("NORMAL") // MessagePriority
+  
+  // For table/order context
+  tableId      String?
+  orderId      String?
+  
+  // Read status
+  readAt       DateTime?
+  
+  createdAt    DateTime @default(now())
+
+  // Relations
+  sender       User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver     User?    @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+}
+
+model Announcement {
+  id           String     @id @default(cuid())
+  restaurantId String
+  authorId     String?
+  
+  title        String
+  content      String
+  targetRoles  String     // Comma-separated roles
+  priority     String     @default("NORMAL")
+  
+  // Scheduling
+  publishAt    DateTime   @default(now())
+  expiresAt    DateTime?
+  
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  @@index([restaurantId])
+  @@index([publishAt])
+}
