@@ -1,7 +1,8 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { useEffect, useState } from "react";
 import type { UserRole } from "@/types";
 
 export interface DemoUser {
@@ -66,16 +67,19 @@ export const demoUsers: Record<string, DemoUser> = {
 interface DemoAuthState {
   user: DemoUser | null;
   isAuthenticated: boolean;
+  _hasHydrated: boolean;
   login: (userType: keyof typeof demoUsers) => void;
   loginAsUser: (user: DemoUser) => void;
   logout: () => void;
+  setHasHydrated: (state: boolean) => void;
 }
 
-export const useDemoAuth = create<DemoAuthState>()(
+export const useDemoAuthStore = create<DemoAuthState>()(
   persist(
     (set) => ({
       user: null,
       isAuthenticated: false,
+      _hasHydrated: false,
       login: (userType) => {
         const user = demoUsers[userType];
         if (user) {
@@ -88,12 +92,48 @@ export const useDemoAuth = create<DemoAuthState>()(
       logout: () => {
         set({ user: null, isAuthenticated: false });
       },
+      setHasHydrated: (state) => {
+        set({ _hasHydrated: state });
+      },
     }),
     {
       name: "kevs-kitchen-demo-auth",
+      storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );
+
+// Hook that waits for hydration to avoid SSR mismatches
+export function useDemoAuth() {
+  const store = useDemoAuthStore();
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // Return default values during SSR/hydration
+  if (!isHydrated) {
+    return {
+      user: null,
+      isAuthenticated: false,
+      login: store.login,
+      loginAsUser: store.loginAsUser,
+      logout: store.logout,
+    };
+  }
+
+  return {
+    user: store.user,
+    isAuthenticated: store.isAuthenticated,
+    login: store.login,
+    loginAsUser: store.loginAsUser,
+    logout: store.logout,
+  };
+}
 
 // Helper to get redirect URL based on role
 export function getRoleRedirectUrl(role: UserRole): string {

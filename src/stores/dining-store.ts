@@ -1,5 +1,8 @@
+"use client";
+
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { useEffect, useState } from 'react';
 
 // Order item in the current dining session
 interface SessionOrderItem {
@@ -109,7 +112,7 @@ interface DiningState {
   getActiveOrders: () => SessionOrderItem[];
 }
 
-export const useDiningStore = create<DiningState>()(
+const useDiningStoreBase = create<DiningState>()(
   persist(
     (set, get) => ({
       activeSession: null,
@@ -404,6 +407,47 @@ export const useDiningStore = create<DiningState>()(
     }),
     {
       name: 'kevs-kitchen-dining',
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );
+
+// Hook that waits for hydration to avoid SSR mismatches
+export function useDiningStore<T>(selector: (state: DiningState) => T): T {
+  const storeValue = useDiningStoreBase(selector);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // For selectors that return null/undefined by default, this works fine
+  // The store will return the hydrated value after mount
+  if (!isHydrated) {
+    // Return default values for common selectors
+    return selector({
+      activeSession: null,
+      startSession: () => {},
+      endSession: () => {},
+      addToOrder: () => {},
+      updateOrderItemStatus: () => {},
+      removeFromOrder: () => {},
+      addCustomRequest: () => {},
+      updateRequestStatus: () => {},
+      sendMessage: () => {},
+      receiveMessage: () => {},
+      markMessagesRead: () => {},
+      requestBill: () => {},
+      setTip: () => {},
+      markAsPaid: () => {},
+      getRunningTotal: () => 0,
+      getPendingOrders: () => [],
+      getActiveOrders: () => [],
+    } as DiningState);
+  }
+
+  return storeValue;
+}
+
+// Export the base store for direct access when needed
+export { useDiningStoreBase };
