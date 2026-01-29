@@ -60,11 +60,25 @@ const demoMenuItems = [
   { id: "6", name: "Caesar Salad", category: "Appetizers", price: 11.99, description: "Romaine lettuce, parmesan, croutons, caesar dressing", image: "https://images.unsplash.com/photo-1546793665-c74683f339c1?w=200&h=200&fit=crop", available: true, popular: false, dietary: ["VEGETARIAN"] },
 ];
 
+interface MenuItem {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  description: string;
+  image: string;
+  available: boolean;
+  popular: boolean;
+  dietary: string[];
+}
+
 export default function MenuManagement() {
   const [items, setItems] = useState(demoMenuItems);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [newItem, setNewItem] = useState({
     name: "",
     category: "",
@@ -95,6 +109,22 @@ export default function MenuManagement() {
     setNewItem({ name: "", category: "", price: "", prepTime: "15", description: "" });
     setIsAddDialogOpen(false);
     toast.success(`${item.name} added to menu`);
+  };
+
+  const openEditDialog = (item: MenuItem) => {
+    setEditingItem({ ...item });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditItem = () => {
+    if (!editingItem) return;
+    
+    setItems(items.map(item => 
+      item.id === editingItem.id ? editingItem : item
+    ));
+    setIsEditDialogOpen(false);
+    setEditingItem(null);
+    toast.success("Menu item updated");
   };
 
   const filteredItems = items.filter(item => {
@@ -296,7 +326,7 @@ export default function MenuManagement() {
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <div className="flex items-center gap-2">
                     <Switch 
                       checked={item.available}
@@ -307,7 +337,11 @@ export default function MenuManagement() {
                     </span>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="ghost" size="icon">
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => openEditDialog(item)}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button 
@@ -335,6 +369,83 @@ export default function MenuManagement() {
           </Card>
         )}
       </div>
+
+      {/* Edit Item Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Menu Item</DialogTitle>
+          </DialogHeader>
+          {editingItem && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Item Name *</Label>
+                <Input 
+                  value={editingItem.name}
+                  onChange={(e) => setEditingItem({...editingItem, name: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Category *</Label>
+                <Select
+                  value={menuCategories.find(c => c.name === editingItem.category)?.id || "1"}
+                  onValueChange={(v) => setEditingItem({
+                    ...editingItem, 
+                    category: menuCategories.find(c => c.id === v)?.name || "Appetizers"
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {menuCategories.map(cat => (
+                      <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Price ($) *</Label>
+                <Input 
+                  type="number" 
+                  step="0.01"
+                  value={editingItem.price}
+                  onChange={(e) => setEditingItem({...editingItem, price: parseFloat(e.target.value) || 0})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea 
+                  value={editingItem.description}
+                  onChange={(e) => setEditingItem({...editingItem, description: e.target.value})}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch 
+                  checked={editingItem.popular}
+                  onCheckedChange={(checked) => setEditingItem({...editingItem, popular: checked})}
+                />
+                <Label>Mark as Popular</Label>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setIsEditDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  className="flex-1 bg-wine hover:bg-wine/90"
+                  onClick={handleEditItem}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
