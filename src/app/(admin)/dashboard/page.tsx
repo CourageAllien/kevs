@@ -34,6 +34,7 @@ import {
   Utensils
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDemoAuth } from "@/stores/demo-auth-store";
 
 // Demo financial stats
 const financialStats = {
@@ -172,7 +173,11 @@ const staffPerformance = [
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
+  const { user } = useDemoAuth();
   const now = new Date();
+  
+  // Check if user is admin (owner) - only admin sees finances and investments
+  const isAdmin = user?.role === "ADMIN";
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -193,7 +198,7 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h1 className="font-serif text-3xl font-bold">Owner Dashboard</h1>
+              <h1 className="font-serif text-3xl font-bold">{isAdmin ? "Owner Dashboard" : "Manager Dashboard"}</h1>
               <p className="text-white/80">
                 {now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
               </p>
@@ -207,12 +212,12 @@ export default function AdminDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
-        {/* Tabs */}
+        {/* Tabs - Finances and Investments only visible to Admin (Owner) */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="grid grid-cols-4 w-full max-w-lg">
+          <TabsList className={cn("grid w-full max-w-lg", isAdmin ? "grid-cols-4" : "grid-cols-2")}>
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="finances">Finances</TabsTrigger>
-            <TabsTrigger value="investments">Investments</TabsTrigger>
+            {isAdmin && <TabsTrigger value="finances">Finances</TabsTrigger>}
+            {isAdmin && <TabsTrigger value="investments">Investments</TabsTrigger>}
             <TabsTrigger value="insights">Insights</TabsTrigger>
           </TabsList>
         </Tabs>
@@ -240,22 +245,42 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-blue-700 font-medium">Today's Profit</p>
-                      <p className="text-3xl font-bold text-blue-800">{formatCurrency(financialStats.todayProfit)}</p>
+              {isAdmin ? (
+                <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-blue-700 font-medium">Today's Profit</p>
+                        <p className="text-3xl font-bold text-blue-800">{formatCurrency(financialStats.todayProfit)}</p>
+                      </div>
+                      <div className="p-3 rounded-full bg-blue-200">
+                        <PiggyBank className="h-6 w-6 text-blue-700" />
+                      </div>
                     </div>
-                    <div className="p-3 rounded-full bg-blue-200">
-                      <PiggyBank className="h-6 w-6 text-blue-700" />
+                    <div className="flex items-center gap-1 mt-3 text-sm text-blue-700">
+                      <span>{financialStats.profitMargin}% profit margin</span>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1 mt-3 text-sm text-blue-700">
-                    <span>{financialStats.profitMargin}% profit margin</span>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-blue-700 font-medium">Orders Today</p>
+                        <p className="text-3xl font-bold text-blue-800">87</p>
+                      </div>
+                      <div className="p-3 rounded-full bg-blue-200">
+                        <UtensilsCrossed className="h-6 w-6 text-blue-700" />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 mt-3 text-sm text-blue-700">
+                      <ArrowUpRight className="h-4 w-4" />
+                      8.2% vs yesterday
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
                 <CardContent className="p-6">
@@ -279,15 +304,22 @@ export default function AdminDashboard() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-orange-700 font-medium">Year to Date</p>
-                      <p className="text-3xl font-bold text-orange-800">{formatCurrency(financialStats.yearRevenue)}</p>
+                      <p className="text-sm text-orange-700 font-medium">{isAdmin ? "Year to Date" : "Customers Today"}</p>
+                      <p className="text-3xl font-bold text-orange-800">{isAdmin ? formatCurrency(financialStats.yearRevenue) : "156"}</p>
                     </div>
                     <div className="p-3 rounded-full bg-orange-200">
-                      <TrendingUp className="h-6 w-6 text-orange-700" />
+                      {isAdmin ? <TrendingUp className="h-6 w-6 text-orange-700" /> : <Users className="h-6 w-6 text-orange-700" />}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 mt-3 text-sm text-orange-700">
-                    <span>Profit: {formatCurrency(financialStats.yearProfit)}</span>
+                    {isAdmin ? (
+                      <span>Profit: {formatCurrency(financialStats.yearProfit)}</span>
+                    ) : (
+                      <>
+                        <ArrowUpRight className="h-4 w-4" />
+                        42 currently seated
+                      </>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -473,8 +505,8 @@ export default function AdminDashboard() {
           </>
         )}
 
-        {/* Finances Tab */}
-        {activeTab === "finances" && (
+        {/* Finances Tab - Admin Only */}
+        {activeTab === "finances" && isAdmin && (
           <>
             <div className="grid gap-6 lg:grid-cols-2 mb-6">
               {/* Revenue Breakdown */}
@@ -597,8 +629,8 @@ export default function AdminDashboard() {
           </>
         )}
 
-        {/* Investments Tab */}
-        {activeTab === "investments" && (
+        {/* Investments Tab - Admin Only */}
+        {activeTab === "investments" && isAdmin && (
           <>
             {/* Investment Summary */}
             <div className="grid gap-4 md:grid-cols-3 mb-6">
