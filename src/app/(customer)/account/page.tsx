@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,13 +27,14 @@ import {
   Utensils
 } from "lucide-react";
 import { toast } from "sonner";
+import { useDemoAuth } from "@/stores/demo-auth-store";
 
 export default function AccountPage() {
-  const { data: session } = useSession();
+  const { user } = useDemoAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: session?.user?.name || "John Doe",
-    email: session?.user?.email || "john@example.com",
+    name: user?.name || "John Doe",
+    email: user?.email || "john@example.com",
     phone: "+1 (555) 123-4567",
     address: "123 Main Street, New York, NY 10001",
     bio: "Food enthusiast who loves trying new cuisines. Always looking for the next great dining experience!",
@@ -66,7 +66,7 @@ export default function AccountPage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
               <div className="relative">
                 <Avatar className="h-24 w-24 border-4 border-wine/20">
-                  <AvatarImage src={session?.user?.image || ""} />
+                  <AvatarImage src={user?.image || ""} />
                   <AvatarFallback className="bg-wine text-white text-2xl">
                     {profileData.name.charAt(0)}
                   </AvatarFallback>
